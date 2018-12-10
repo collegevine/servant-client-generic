@@ -1,3 +1,3 @@
-# Changelog for servant-ps
+# Changelog for servant-client-generic
 
 ## Unreleased changes
