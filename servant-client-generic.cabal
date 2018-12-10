@@ -1,0 +1,42 @@
+-- This file has been generated from package.yaml by hpack version 0.28.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 28586304bbde689a2fcbf6635bd486e5d71b903a058f596ca450a76e6838cf67
+
+name:           servant-client-generic
+version:        0.1.0
+description:    Please see the README on GitHub at <https://github.com/collegevine/servant-client-generic#readme>
+homepage:       https://github.com/collegevine/servant-client-generic#readme
+bug-reports:    https://github.com/collegevine/servant-client-generic/issues
+author:         Ralph Morton
+maintainer:     ralphmorton@gmail.com
+copyright:      2018 CollegeVine
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+extra-source-files:
+    ChangeLog.md
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/collegevine/servant-client-generic
+
+library
+  exposed-modules:
+      Servant.Client.Generic
+  other-modules:
+      Paths_servant_client_generic
+  hs-source-dirs:
+      src
+  build-depends:
+      base
+    , http-types
+    , mtl
+    , servant
+    , servant-server
+    , template-haskell
+    , text
+  default-language: Haskell2010

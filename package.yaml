@@ -1,0 +1,25 @@
+name:                servant-client-generic
+version:             0.1.0
+github:              "collegevine/servant-client-generic"
+license:             BSD3
+author:              "Ralph Morton"
+maintainer:          "ralphmorton@gmail.com"
+copyright:           "2018 CollegeVine"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+description:         Please see the README on GitHub at <https://github.com/collegevine/servant-client-generic#readme>
+
+dependencies:
+- base
+- text
+- mtl
+- servant
+- servant-server
+- template-haskell
+- http-types
+
+library:
+  source-dirs: src
