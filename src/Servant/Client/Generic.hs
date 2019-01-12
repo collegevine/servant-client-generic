@@ -1,15 +1,3 @@
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 module Servant.Client.Generic (
     HasClientEndpoints(..),
     WithClientEndpoints,
@@ -112,6 +100,7 @@ instance (
     HasServer (WithClientEndpoints name (Verb method status ctypes a)) ctx where
     type ServerT (WithClientEndpoints name (Verb method status ctypes a)) m = ServerT (Verb method status ctypes a) m
     route Proxy ctx d = route (Proxy :: Proxy (Verb method status ctypes a)) ctx d
+    hoistServerWithContext _ ctxProxy = hoistServerWithContext (Proxy :: Proxy (Verb method status ctypes a)) ctxProxy
 
 --
 --

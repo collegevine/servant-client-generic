@@ -21,5 +21,26 @@ dependencies:
 - template-haskell
 - http-types
 
+default-extensions:
+  AllowAmbiguousTypes
+  ConstraintKinds
+  DataKinds
+  FlexibleContexts
+  FlexibleInstances
+  MultiParamTypeClasses
+  OverloadedStrings
+  PolyKinds
+  ScopedTypeVariables
+  TypeFamilies
+  TypeOperators
+
+ghc-options:         
+  -Wall 
+  -Werror 
+  -Wincomplete-record-updates 
+  -Wincomplete-uni-patterns 
+  -Wredundant-constraints
+
 library:
   source-dirs: src
+
