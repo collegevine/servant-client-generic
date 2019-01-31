@@ -33,6 +33,7 @@ default-extensions:
   ScopedTypeVariables
   TypeFamilies
   TypeOperators
+  UndecidableInstances
 
 ghc-options:         
   -Wall 

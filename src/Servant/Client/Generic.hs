@@ -13,7 +13,7 @@ module Servant.Client.Generic (
 import Data.Monoid ((<>))
 import Data.Proxy (Proxy)
 import Data.Typeable
-import GHC.TypeLits (KnownSymbol, Symbol, symbolVal)
+import GHC.TypeLits (ErrorMessage(..), KnownSymbol, Symbol, TypeError, symbolVal)
 import Network.HTTP.Types (Method, methodGet, methodPut, methodPost, methodDelete)
 import Servant hiding (Delete, Get, Post, Put)
 import qualified Servant as S
@@ -25,14 +25,6 @@ import qualified Servant as S
 class HasClientEndpoints a where
     endpoints :: Proxy a -> [Endpoint]
 
---
---
---
-
-type family Contains (t :: *) (a :: [*]) where
-    Contains t '[] = 'False
-    Contains t (t ': ax) = 'True
-    Contains t (a ': ax) = Contains t ax
 
 --
 --
@@ -196,7 +188,7 @@ instance (
     Typeable a,
     KnownSymbol name,
     IsHttpMethod method,
-    Contains JSON ctypes ~ 'True) => HasClientEndpoints (WithClientEndpoints name (Verb method status ctypes a)) where
+    ContainsJSON ctypes name ~ 'True) => HasClientEndpoints (WithClientEndpoints name (Verb method status ctypes a)) where
     endpoints Proxy = [endpoint]
         where
         endpoint = Endpoint {
@@ -205,7 +197,18 @@ instance (
             eVerb = toHttpMethod (Proxy :: Proxy method),
             eResult = toTypeInfo (Proxy :: Proxy a)
         }
-
+        
+type family ContainsJSON (a :: [*]) endpointName where
+    ContainsJSON (JSON ': ax) endpointName = 
+        'True
+    ContainsJSON (a ': ax) endpointName = 
+        ContainsJSON ax endpointName
+    ContainsJSON '[] endpointName = TypeError 
+        (     'Text "Cannot generate client for endpoint '" 
+        ':$$: 'Text endpointName 
+        ':$$: 'Text "', because it doesn't have JSON among its return encodings."
+        )
+        
 --
 --
 --
