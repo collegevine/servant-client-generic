@@ -123,18 +123,18 @@ instance (
         where
         prepend = fmap (prependPart part)
         part = PCapture (symbolVal (Proxy :: Proxy cap)) inf
-        inf = toTypeInfo (Proxy :: Proxy a)
+        inf = toTypeInfo @a
 
 -- CaptureAll
 instance (
     KnownSymbol cap,
-    Typeable [a],
+    Typeable a,
     HasClientEndpoints api) => HasClientEndpoints (CaptureAll cap a :> api) where
     endpoints Proxy = prepend $ endpoints (Proxy :: Proxy api) 
         where
         prepend = fmap (prependPart part)
         part = PCaptureAll (symbolVal (Proxy :: Proxy cap)) inf
-        inf = toTypeInfo (Proxy :: Proxy [a])
+        inf = toTypeInfo @a
 
 -- Request body
 instance (
@@ -144,7 +144,7 @@ instance (
         where
         prepend = fmap (prependPart part)
         part = PRequestBody inf
-        inf = toTypeInfo (Proxy :: Proxy a)
+        inf = toTypeInfo @a
 
 -- Query param
 instance (
@@ -155,7 +155,7 @@ instance (
         where
         prepend = fmap (prependPart part)
         part = PQueryParam (symbolVal (Proxy :: Proxy sym)) inf
-        inf = toTypeInfo (Proxy :: Proxy (Maybe a))
+        inf = toTypeInfo @a
 
 -- Query params
 instance (
@@ -166,7 +166,7 @@ instance (
         where
         prepend = fmap (prependPart part)
         part = PQueryParams (symbolVal (Proxy :: Proxy sym)) inf
-        inf = toTypeInfo (Proxy :: Proxy (Maybe a))
+        inf = toTypeInfo @a
 
 -- Header
 instance (
@@ -178,7 +178,7 @@ instance (
         name = symbolVal (Proxy :: Proxy sym)
         prepend = fmap (prependPart part)
         part = PHeader name inf
-        inf = toTypeInfo (Proxy :: Proxy a)
+        inf = toTypeInfo @a
 
 -- Verb
 instance HasClientEndpoints (Verb method status ctypes a) where
@@ -195,7 +195,7 @@ instance (
             eName = symbolVal (Proxy :: Proxy name),
             eParts = [],
             eVerb = toHttpMethod (Proxy :: Proxy method),
-            eResult = toTypeInfo (Proxy :: Proxy a)
+            eResult = toTypeInfo @a
         }
         
 type family ContainsJSON (a :: [*]) endpointName where
@@ -216,8 +216,8 @@ type family ContainsJSON (a :: [*]) endpointName where
 prependPart :: Part -> Endpoint -> Endpoint
 prependPart part e = e { eParts = part : eParts e }
 
-toTypeInfo :: Typeable a => Proxy a -> TypeInfo
-toTypeInfo = toTypeInfo' . typeRep
+toTypeInfo :: forall a. Typeable a => TypeInfo
+toTypeInfo = toTypeInfo' . typeRep $ Proxy @a
     where
     toTypeInfo' rep =
         let con = typeRepTyCon rep in
