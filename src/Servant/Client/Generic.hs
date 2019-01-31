@@ -80,6 +80,7 @@ data Part
     | PCapture String TypeInfo
     | PCaptureAll String TypeInfo
     | PQueryParam String TypeInfo
+    | PQueryParams String TypeInfo
     | PRequestBody TypeInfo
     | PHeader String TypeInfo
     deriving Show
@@ -162,6 +163,17 @@ instance (
         where
         prepend = fmap (prependPart part)
         part = PQueryParam (symbolVal (Proxy :: Proxy sym)) inf
+        inf = toTypeInfo (Proxy :: Proxy (Maybe a))
+
+-- Query params
+instance (
+    KnownSymbol sym,
+    Typeable a,
+    HasClientEndpoints api) => HasClientEndpoints (QueryParams sym (a :: *) :> api) where
+    endpoints Proxy = prepend $ endpoints (Proxy :: Proxy api)
+        where
+        prepend = fmap (prependPart part)
+        part = PQueryParams (symbolVal (Proxy :: Proxy sym)) inf
         inf = toTypeInfo (Proxy :: Proxy (Maybe a))
 
 -- Header
