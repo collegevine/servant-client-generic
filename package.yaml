@@ -31,8 +31,10 @@ default-extensions:
   OverloadedStrings
   PolyKinds
   ScopedTypeVariables
+  TypeApplications
   TypeFamilies
   TypeOperators
+  UndecidableInstances
 
 ghc-options:         
   -Wall 

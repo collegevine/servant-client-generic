@@ -13,7 +13,7 @@ module Servant.Client.Generic (
 import Data.Monoid ((<>))
 import Data.Proxy (Proxy)
 import Data.Typeable
-import GHC.TypeLits (KnownSymbol, Symbol, symbolVal)
+import GHC.TypeLits (ErrorMessage(..), KnownSymbol, Symbol, TypeError, symbolVal)
 import Network.HTTP.Types (Method, methodGet, methodPut, methodPost, methodDelete)
 import Servant hiding (Delete, Get, Post, Put)
 import qualified Servant as S
@@ -25,14 +25,6 @@ import qualified Servant as S
 class HasClientEndpoints a where
     endpoints :: Proxy a -> [Endpoint]
 
---
---
---
-
-type family Contains (t :: *) (a :: [*]) where
-    Contains t '[] = 'False
-    Contains t (t ': ax) = 'True
-    Contains t (a ': ax) = Contains t ax
 
 --
 --
@@ -80,6 +72,7 @@ data Part
     | PCapture String TypeInfo
     | PCaptureAll String TypeInfo
     | PQueryParam String TypeInfo
+    | PQueryParams String TypeInfo
     | PRequestBody TypeInfo
     | PHeader String TypeInfo
     deriving Show
@@ -130,18 +123,18 @@ instance (
         where
         prepend = fmap (prependPart part)
         part = PCapture (symbolVal (Proxy :: Proxy cap)) inf
-        inf = toTypeInfo (Proxy :: Proxy a)
+        inf = toTypeInfo @a
 
 -- CaptureAll
 instance (
     KnownSymbol cap,
-    Typeable [a],
+    Typeable a,
     HasClientEndpoints api) => HasClientEndpoints (CaptureAll cap a :> api) where
     endpoints Proxy = prepend $ endpoints (Proxy :: Proxy api) 
         where
         prepend = fmap (prependPart part)
         part = PCaptureAll (symbolVal (Proxy :: Proxy cap)) inf
-        inf = toTypeInfo (Proxy :: Proxy [a])
+        inf = toTypeInfo @a
 
 -- Request body
 instance (
@@ -151,7 +144,7 @@ instance (
         where
         prepend = fmap (prependPart part)
         part = PRequestBody inf
-        inf = toTypeInfo (Proxy :: Proxy a)
+        inf = toTypeInfo @a
 
 -- Query param
 instance (
@@ -162,7 +155,18 @@ instance (
         where
         prepend = fmap (prependPart part)
         part = PQueryParam (symbolVal (Proxy :: Proxy sym)) inf
-        inf = toTypeInfo (Proxy :: Proxy (Maybe a))
+        inf = toTypeInfo @a
+
+-- Query params
+instance (
+    KnownSymbol sym,
+    Typeable a,
+    HasClientEndpoints api) => HasClientEndpoints (QueryParams sym (a :: *) :> api) where
+    endpoints Proxy = prepend $ endpoints (Proxy :: Proxy api)
+        where
+        prepend = fmap (prependPart part)
+        part = PQueryParams (symbolVal (Proxy :: Proxy sym)) inf
+        inf = toTypeInfo @a
 
 -- Header
 instance (
@@ -174,7 +178,7 @@ instance (
         name = symbolVal (Proxy :: Proxy sym)
         prepend = fmap (prependPart part)
         part = PHeader name inf
-        inf = toTypeInfo (Proxy :: Proxy a)
+        inf = toTypeInfo @a
 
 -- Verb
 instance HasClientEndpoints (Verb method status ctypes a) where
@@ -184,16 +188,27 @@ instance (
     Typeable a,
     KnownSymbol name,
     IsHttpMethod method,
-    Contains JSON ctypes ~ 'True) => HasClientEndpoints (WithClientEndpoints name (Verb method status ctypes a)) where
+    ContainsJSON ctypes name ~ 'True) => HasClientEndpoints (WithClientEndpoints name (Verb method status ctypes a)) where
     endpoints Proxy = [endpoint]
         where
         endpoint = Endpoint {
             eName = symbolVal (Proxy :: Proxy name),
             eParts = [],
             eVerb = toHttpMethod (Proxy :: Proxy method),
-            eResult = toTypeInfo (Proxy :: Proxy a)
+            eResult = toTypeInfo @a
         }
-
+        
+type family ContainsJSON (a :: [*]) endpointName where
+    ContainsJSON (JSON ': ax) endpointName = 
+        'True
+    ContainsJSON (a ': ax) endpointName = 
+        ContainsJSON ax endpointName
+    ContainsJSON '[] endpointName = TypeError 
+        (     'Text "Cannot generate client for endpoint '" 
+        ':<>: 'Text endpointName 
+        ':<>: 'Text "', because it doesn't have JSON among its return encodings."
+        )
+        
 --
 --
 --
@@ -201,8 +216,8 @@ instance (
 prependPart :: Part -> Endpoint -> Endpoint
 prependPart part e = e { eParts = part : eParts e }
 
-toTypeInfo :: Typeable a => Proxy a -> TypeInfo
-toTypeInfo = toTypeInfo' . typeRep
+toTypeInfo :: forall a. Typeable a => TypeInfo
+toTypeInfo = toTypeInfo' . typeRep $ Proxy @a
     where
     toTypeInfo' rep =
         let con = typeRepTyCon rep in
