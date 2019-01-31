@@ -205,8 +205,8 @@ type family ContainsJSON (a :: [*]) endpointName where
         ContainsJSON ax endpointName
     ContainsJSON '[] endpointName = TypeError 
         (     'Text "Cannot generate client for endpoint '" 
-        ':$$: 'Text endpointName 
-        ':$$: 'Text "', because it doesn't have JSON among its return encodings."
+        ':<>: 'Text endpointName 
+        ':<>: 'Text "', because it doesn't have JSON among its return encodings."
         )
         
 --
