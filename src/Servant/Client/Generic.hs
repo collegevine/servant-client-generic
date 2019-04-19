@@ -75,7 +75,6 @@ data Part
     | PQueryParams String TypeInfo
     | PRequestBody TypeInfo
     | PHeader String TypeInfo
-    | PRemoteHost
     deriving Show
 
 data TypeInfo = TypeInfo {
@@ -184,10 +183,7 @@ instance (
 -- RemoteHost
 instance (
     HasClientEndpoints api) => HasClientEndpoints (RemoteHost :> api) where
-    endpoints Proxy = prepend $ endpoints (Proxy :: Proxy api)
-        where
-        prepend = fmap (prependPart part)
-        part = PRemoteHost
+    endpoints Proxy = endpoints (Proxy :: Proxy api)
 
 -- Verb
 instance HasClientEndpoints (Verb method status ctypes a) where
