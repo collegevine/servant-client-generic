@@ -180,6 +180,11 @@ instance (
         part = PHeader name inf
         inf = toTypeInfo @a
 
+-- RemoteHost
+instance (
+    HasClientEndpoints api) => HasClientEndpoints (RemoteHost :> api) where
+    endpoints Proxy = endpoints (Proxy :: Proxy api)
+
 -- Verb
 instance HasClientEndpoints (Verb method status ctypes a) where
     endpoints Proxy = []
